@@ -35,14 +35,14 @@ def check_tokens(TELEGRAM_TOKEN):
 
 
 def send_message(bot, message):
-    """Отправляет сообщение."""
+    """Отправляет сообщение в tg."""
     try:
         message = 'Важное сообщение'
-        bot = bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-        logger.info(f'Сообщение отправлено: {message}')
-    except telegram.error.TelegramError as error:
+        bot.send_message(TELEGRAM_CHAT_ID, message)
+        logger.debug(f'Сообщение отправлено: {message}')
+    except telegram.TelegramError as error:
         print('Сообщение не отправлено')
-        logging.critical(error)
+        logging.error(error)
 
 
 def get_api_answer(timestamp):
@@ -81,33 +81,36 @@ def check_response(response):
     if not homeworks_response:
         message_status = ('Отсутствует статус homeworks')
         raise KeyError(message_status)
-    if not isinstance(homeworks_response, list):
+    elif not isinstance(homeworks_response, list):
         message_list = ('Неверный тип входящих данных')
         raise TypeError(message_list)
-    if 'current_date' not in response.keys():
+    elif 'current_date' not in response.keys():
         message_current_date = ('Ключ "current_date" отсутствует в словаре')
         raise KeyError(message_current_date)
     return homeworks_response
 
 
 def parse_status(homework):
-    """Извлекает статус работы."""
+    """Извлекает статус домашней работы."""
     try:
         homework_name = homework.get('homework_name')
+        homework_status = homework.get('status')
+        verdict = HOMEWORK_VERDICTS[homework_status]
     except KeyError:
-        logger.error('Такого имени не существует')
-        raise KeyError('Такого имени не существует')
-    homework_status = homework.get('status')
-    verdict = HOMEWORK_VERDICTS[homework_status]
+        logger.error('Такого названия не существует')
+        raise KeyError('Такого названия не существует')
     if not verdict:
         message_verdict = 'Такого статуса нет в словаре'
         raise KeyError(message_verdict)
-    if homework_status not in HOMEWORK_VERDICTS:
+    elif homework_status not in HOMEWORK_VERDICTS:
         message_homework_status = 'Такого статуса не существует'
         raise KeyError(message_homework_status)
-    if not homework_status:
+    elif not homework_status:
         message_status = ('Отсутствует статус homeworks')
         raise KeyError(message_status)
+    elif not homework_name:
+        message_verdict = 'Нет имени работы homework_name'
+        raise KeyError(message_verdict)
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
