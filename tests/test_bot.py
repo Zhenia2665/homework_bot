@@ -173,7 +173,7 @@ class TestHomework:
                 '`Authorization`.'
             )
             assert kwargs['headers']['Authorization'].startswith('OAuth '), (
-                'Проверьте, что заголовок `Authorization` начинается с `OAuth`.'
+                'Проверьте, что заголовок `Authorization` начинается с `OAuth`'
             )
             assert 'params' in kwargs, (
                 'Проверьте, что в запросе переданы параметры `params`.'
@@ -341,7 +341,8 @@ class TestHomework:
             else:
                 raise AssertionError(
                     f'Убедитесь, что функция `{func_name}` выбрасывает '
-                    'исключение, когда API домашки возвращает недокументированный '
+                    'исключение, когда API домашки возвращает'
+                    'недокументированный '
                     'статус домашней работы либо домашку без статуса.'
                 )
 
@@ -365,8 +366,6 @@ class TestHomework:
                     'исключение с понятным текстом ошибки, когда в ответе '
                     'API домашки нет ключа `homework_name`.'
                 )
-        except Exception as e:
-            pass
         else:
             raise AssertionError(
                 f'Убедитесь, что функция `{func_name}` выбрасывает '
@@ -429,7 +428,7 @@ class TestHomework:
         else:
             assert_message = (
                 f'Убедитесь, что функция `{func_name}` выбрасывает исключение '
-                '`TypeError`, если в ответе API домашки под ключом `homeworks` '
+                '`TypeError`, если в ответе API домашки под ключом `homeworks`'
                 'данные приходят не в виде списка.'
             )
             if isinstance(response.data, list):
@@ -453,7 +452,6 @@ class TestHomework:
         homework_module.PRACTICUM_TOKEN = 'sometoken'
         homework_module.TELEGRAM_TOKEN = '1234:abcdefg'
         homework_module.TELEGRAM_CHAT_ID = '12345'
-        
         func_name = 'send_message'
         utils.check_function(
             homework_module,
@@ -468,12 +466,10 @@ class TestHomework:
                 'событие логируется с уровнем `DEBUG`.'
         )):
             homework_module.send_message(bot, 'Test_message_check')
-            assert bot.chat_id, (
-                'Проверьте, что при отправке сообщения бота передан параметр `chat_id`.'
-            )
-            assert bot.text, (
-                'Проверьте, что при отправке сообщения бота передан параметр `text`.'
-            )
+            assert bot.chat_id, ('Проверьте, что при отправке сообщения бота'
+                                 'передан параметр `chat_id`.')
+            assert bot.text, ('Проверьте, что при отправке сообщения бота'
+                              'передан параметр `text`.')
             assert bot.is_message_sent, (
                 'Убедитесь, что для отправки сообщения в Telegram применён '
                 'метод бота `send_message`.'
@@ -504,7 +500,8 @@ class TestHomework:
             except telegram.error.TelegramError:
                 raise AssertionError(
                     f'Убедитесь, что в функции `{func_name}` обрабатывается '
-                    'ситуация, когда при отправке сообщения из бота возникает ошибка.'
+                    'ситуация, когда при отправке сообщения из бота возникает'
+                    'ошибка.'
                 )
             except Exception:
                 pass
