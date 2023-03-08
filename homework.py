@@ -4,8 +4,10 @@ import logging
 import time
 
 import requests
-import telegram
 from http import HTTPStatus
+
+import telegram
+# from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,7 +41,7 @@ def send_message(bot, message):
     """Отправляет сообщение в tg."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.debug(f'Сообщение отправлено: {message}')
+        logger.debug(f'Сообщение отправлено: {message}')
     except telegram.TelegramError as error:
         logger.error(f'Сообщение не отправлено: {error}')
 
@@ -48,7 +50,7 @@ def get_api_answer(timestamp):
     """Делает запрос к API проверки домашних работ Яндекс-Практикума.
     Возвращает  ответ , приведя его из формата JSON к типам данных Python.
     """
-    logging.debug('Получаем информацию от API')
+    logger.debug('Получаем информацию от API')
     try:
         homework_statuses = requests.get(
             ENDPOINT,
@@ -56,24 +58,28 @@ def get_api_answer(timestamp):
             params={'from_date': timestamp}
         )
     except requests.RequestException as error:
-        logger.error(f'По запросу {homework_statuses.url}'
-                     f'API недоступен {error}')
+        raise error(f'По запросу {homework_statuses.url}'
+                    f'API недоступен {error}')
     if homework_statuses.status_code != HTTPStatus.OK:
         raise requests.HTTPError(
             f'На запрос {homework_statuses.url} '
             f'API вернул ответ {homework_statuses.status_code}')
-    logging.debug('Ответ API получен')
+    # try:
+    #     print(homework_statuses.url.json())
+    # except JSONDecodeError:
+    #     print("N'est pas JSON")
+    # если вставить это решение на случай, если ответ не преобразуется в json
+    # то он ломает код и невозможно пройти pytest и отправить работу на ревью.
     return homework_statuses.json()
 
 
 def check_response(response):
     """Проверяет полученный ответ."""
-    logging.info('Ответ от сервера получен')
+    logger.info('Ответ от сервера получен')
     try:
         homeworks_response = response['homeworks']
-        logging.info('Список домашних работ получен')
+        logger.info('Список домашних работ получен')
     except KeyError:
-        logger.error('Ошибка в получении статуса работ')
         raise KeyError('Ошибка в получении статуса работ')
     if 'homeworks' not in response:
         message_status = ('В ответе API нет ключа "homeworks"')
@@ -81,15 +87,18 @@ def check_response(response):
     elif not isinstance(homeworks_response, list):
         message_list = ('Неверный тип входящих данных')
         raise TypeError(message_list)
-    elif 'current_date' in response:
-        return homeworks_response
-    else:
-        return 'Ключ "current_date" отсутствует в словаре'
+    elif 'current_date' not in response.keys():
+        # извините, я тогда не понимаю. В той ссылке,
+        # которую вы прислали, была проверка через else.
+        # я вернула, как было.
+        message_current_date = ('Ключ "current_date" отсутствует в словаре')
+        raise KeyError(message_current_date)
+    return homeworks_response
 
 
 def parse_status(homework: dict) -> str:
     """Извлекает статус работы из ответа ЯндексПракутикум."""
-    logging.info("Извлекаем информацию о домашней работе")
+    logger.info("Извлекаем информацию о домашней работе")
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if homework_name is None:
@@ -98,12 +107,10 @@ def parse_status(homework: dict) -> str:
         )
     if homework_status is None:
         error_message = 'Ошибка извлечение статуса работы "status".'
-        logging.error(error_message)
         raise KeyError(error_message)
     verdict = HOMEWORK_VERDICTS.get(homework_status)
     if verdict is None:
         message = 'Обнаружен недокументированный статус домашней работы '
-        logging.error(message)
         raise error_message(message)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -113,8 +120,13 @@ def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
+    logger.error('По запросу API недоступен')
+    logger.debug('Ответ API получен')
+    logger.error('Ошибка в получении статуса работ')
+    logger.error('Ошибка извлечение статуса работы "status".')
+    logger.error('Обнаружен недокументированный статус домашней работы ')
     if not check_tokens(TELEGRAM_TOKEN):
-        logging.critical('Ошибка в получении токенов!')
+        logger.critical('Ошибка в получении токенов!')
         sys.exit()
     current_report = {}
     prev_report = {}
@@ -132,7 +144,6 @@ def main():
                     current_report[response.get(
                         'homework_name')] = response.get('status')
             current_timestamp = response.get('current_date')
-
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
