@@ -2,12 +2,11 @@ import os
 import sys
 import logging
 import time
+from http import HTTPStatus
+from json.decoder import JSONDecodeError
 
 import requests
-from http import HTTPStatus
-
 import telegram
-# from json.decoder import JSONDecodeError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,19 +57,18 @@ def get_api_answer(timestamp):
             params={'from_date': timestamp}
         )
     except requests.RequestException as error:
-        raise error(f'По запросу {homework_statuses.url}'
-                    f'API недоступен {error}')
+        error_message = (f'По запросу {homework_statuses.url}'
+                         f'API недоступен {error}')
+        raise requests.RequestException(error_message)
     if homework_statuses.status_code != HTTPStatus.OK:
         raise requests.HTTPError(
             f'На запрос {homework_statuses.url} '
             f'API вернул ответ {homework_statuses.status_code}')
-    # try:
-    #     print(homework_statuses.url.json())
-    # except JSONDecodeError:
-    #     print("N'est pas JSON")
-    # если вставить это решение на случай, если ответ не преобразуется в json
-    # то он ломает код и невозможно пройти pytest и отправить работу на ревью.
-    return homework_statuses.json()
+    try:
+        return homework_statuses.json()
+    except JSONDecodeError as Exception:
+        logger.error(Exception)
+        raise Exception
 
 
 def check_response(response):
@@ -87,10 +85,7 @@ def check_response(response):
     elif not isinstance(homeworks_response, list):
         message_list = ('Неверный тип входящих данных')
         raise TypeError(message_list)
-    elif 'current_date' not in response.keys():
-        # извините, я тогда не понимаю. В той ссылке,
-        # которую вы прислали, была проверка через else.
-        # я вернула, как было.
+    elif 'current_date' not in response:
         message_current_date = ('Ключ "current_date" отсутствует в словаре')
         raise KeyError(message_current_date)
     return homeworks_response
