@@ -67,7 +67,9 @@ def get_api_answer(timestamp):
     try:
         return homework_statuses.json()
     except JSONDecodeError as Exception:
-        raise Exception
+        message = 'При декодировании ответа со статусами домашних работ'\
+                  'произошла ошибка.'
+        raise Exception(message)
 
 
 def check_response(response):
@@ -114,15 +116,6 @@ def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
-    logger.error('По запросу API недоступен')
-    # В первой итерации вы сказали перенести все логирование в main(),
-    # кроме проверки токенов и отправки сообщений,
-    # что я и сделала.
-    logger.debug('Ответ API получен')
-    logger.error(Exception)
-    logger.error('Ошибка в получении статуса работ')
-    logger.error('Ошибка извлечение статуса работы "status".')
-    logger.error('Обнаружен недокументированный статус домашней работы ')
     if not check_tokens(TELEGRAM_TOKEN):
         logger.critical('Ошибка в получении токенов!')
         sys.exit()
@@ -147,6 +140,13 @@ def main():
             logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
+        logger.error('По запросу API недоступен')
+        logger.debug('Ответ API получен')
+        logger.error('При декодировании ответа со статусами домашних работ'
+                     'произошла ошибка')
+        logger.error('Ошибка в получении статуса работ')
+        logger.error('Ошибка извлечение статуса работы "status".')
+        logger.error('Обнаружен недокументированный статус домашней работы ')
 
 
 if __name__ == '__main__':
