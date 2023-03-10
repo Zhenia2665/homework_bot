@@ -140,13 +140,6 @@ def main():
             logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
-        logger.error('По запросу API недоступен')
-        logger.debug('Ответ API получен')
-        logger.error('При декодировании ответа со статусами домашних работ'
-                     'произошла ошибка')
-        logger.error('Ошибка в получении статуса работ')
-        logger.error('Ошибка извлечение статуса работы "status".')
-        logger.error('Обнаружен недокументированный статус домашней работы ')
 
 
 if __name__ == '__main__':
