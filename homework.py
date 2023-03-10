@@ -119,22 +119,13 @@ def main():
     if not check_tokens(TELEGRAM_TOKEN):
         logger.critical('Ошибка в получении токенов!')
         sys.exit()
-    current_report = {}
-    prev_report = {}
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework = check_response(response)[0]
+            homework = check_response(response)
             if homework:
-                message = parse_status(homework)
-                current_report[response.get(
-                    'homework_name')] = response.get('status')
-                if current_report != prev_report:
-                    send_message(bot, message)
-                    prev_report = current_report.copy()
-                    current_report[response.get(
-                        'homework_name')] = response.get('status')
-            current_timestamp = response.get('current_date')
+                message = parse_status(homework[0])
+                send_message(bot, message)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
